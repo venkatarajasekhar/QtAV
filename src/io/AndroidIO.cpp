@@ -28,7 +28,17 @@
 #include <QtGui/QGuiApplication>
 #include <QtAndroidExtras>
 #include "utils/Logger.h"
+#include <iostream>       // std::cout
+#include <string>
+#include <exception>      // std::exception_ptr, std::current_exception, std::rethrow_exception
+#include <stdexcept>      // std::logic_error
+using namespace std;
+exception_ptr ExceptionPointer;
+  
 
+  
+  return 0;
+}
 // TODO: how to get filename and find subtitles?
 //http://stackoverflow.com/questions/5657411/android-getting-a-file-uri-from-a-content-uri
 //http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri-for-intent-action-get-content/20559418#20559418
@@ -74,9 +84,30 @@ FACTORY_REGISTER(MediaIO, Android, kName)
 AndroidIO::AndroidIO()
     : MediaIO()
 {
-    QPlatformNativeInterface *interface = QGuiApplication::platformNativeInterface();
-    jobject activity = (jobject)interface->nativeResourceForIntegration("QtActivity");
-    app_ctx = QAndroidJniObject(activity).callObjectMethod("getApplicationContext","()Landroid/content/Context;");
+    try {
+     QPlatformNativeInterface *interface = QGuiApplication::platformNativeInterface() ;   
+     throw logic_error("some logic_error exception");   
+  } catch(const exception& e) {
+     ExceptionPointer = current_exception();
+     //Logger API
+      
+  }
+  try {
+     rethrow_exception (ExceptionPointer);
+  } catch (const exception& e) {
+    //Logger API
+  } 
+   // Safe code to overcome the Dangling Pointer problems,Modified the API.
+    const char *Qtptr = "QtActivity";
+    string Qtstr(Qtptr);
+   //jobject activity = (jobject)interface->nativeResourceForIntegration(Qtptr);
+    jobject activity = (jobject)interface->nativeResourceForIntegration(Qtstr);
+    //app_ctx = QAndroidJniObject(activity).callObjectMethod("getApplicationContext","()Landroid/content/Context;");
+    const char* QandroidPtr = "getApplicationContext";
+    const char* QcontextPath = "()Landroid/content/Context;"
+    string QtAndrstr(QandroidPtr);
+    string QtCtxstr(QcontextPath);
+    app_ctx = QAndroidJniObject(activity).callObjectMethod(QtAndrstr,QtCtxstr);
 }
 
 bool AndroidIO::isSeekable() const
@@ -106,13 +137,18 @@ qint64 AndroidIO::position() const
 void AndroidIO::onUrlChanged()
 {
     qt_file.close();
-    QAndroidJniObject content_resolver = app_ctx.callObjectMethod("getContentResolver", "()Landroid/content/ContentResolver;");
+    const char *ConRes = "getContentResolver";
+    const char *ConResPath = "()Landroid/content/ContentResolver;";
+    string AndrConRes(ConRes);
+    string AndConResPath(ConResPath);
+    QAndroidJniObject content_resolver = app_ctx.callObjectMethod(AndrConRes,ConResPath );
+   //QAndroidJniObject content_resolver = app_ctx.callObjectMethod("getContentResolver", "()Landroid/content/ContentResolver;");
     if (!content_resolver.isValid()) {
         qWarning("getContentResolver error");
         return;
     }
     QAndroidJniObject s = QAndroidJniObject::fromString(url());
-    QAndroidJniObject uri = QAndroidJniObject::callStaticObjectMethod("android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;", s.object<jstring>());
+    //QAndroidJniObject uri = QAndroidJniObject::callStaticObjectMethod("android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;", s.object<jstring>());
     //input_stream = content_resolver.callObjectMethod("openInputStream", "(Landroid.net.Uri;)Ljava.io.InputStream;", uri.object<jobject>()); // TODO: why error?
     //qDebug() << "onUrlChanged InputStream: " << input_stream.toString();
     s = QAndroidJniObject::fromString(QStringLiteral("r"));
