@@ -30,19 +30,66 @@ using namespace QtAV;
 PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
 {
     m_unit = 1000;
-    setWindowTitle(QString::fromLatin1("QtAV simple player example"));
-    m_player = new AVPlayer(this);
-    QVBoxLayout *vl = new QVBoxLayout();
-    setLayout(vl);
-    m_vo = new VideoOutput(this);
-    if (!m_vo->widget()) {
-        QMessageBox::warning(0, QString::fromLatin1("QtAV error"), tr("Can not create video renderer"));
-        return;
+    try{
+    const char* QTPlayer = "QtAV simple player example";
+    }catch(bad_alloc& ba){
+        //Logger Implementation
     }
+    string QTPExstr(QTPlayer);
+    setWindowTitle(QString::fromLatin1(QTPExstr));
+    
+    m_player = new AVPlayer(this);
+    try{
+    QVBoxLayout *vl = new QVBoxLayout();
+    }catch(bad_alloc &balloc){
+        //Logger Implementation
+    }
+    setLayout(vl);
+    try{
+    m_vo = new VideoOutput(this);
+    }catch(bad_alloc &pbadalloc){
+        //Logger Implementation
+    }
+    if (!m_vo->widget()) {
+        exception_ptr ptr_widget;
+  try {
+     throw logic_error("some logic_error exception");   // throws
+  } catch(const exception& e) {
+     ptr_widget = current_exception();
+   //  std::cout << "exception caught, but continuing...\n";
+  }
+  //std::cout << "(after exception)\n";
+  try {
+   rethrow_exception (ptr_widget);
+  } catch (const exception& e) {
+     //cout << "exception caught: " << e.what() << '\n';
+     //Logger Impl
+  }
+  QMessageBox::warning(0, QString::fromLatin1("QtAV error"), tr("Can not create video renderer"));
+  return;
+    }
+    exception_ptr exwidget;
     m_player->setRenderer(m_vo);
     vl->addWidget(m_vo->widget());
+    try{
     m_slider = new QSlider();
+    }catch(bad_alloc &allocptr){
+        //Logger Implementation
+    }
     m_slider->setOrientation(Qt::Horizontal);
+    try {
+    throw logic_error("some logic_error exception");   // throws
+  } catch(const exception& e) {
+     exwidget = current_exception();
+   //  std::cout << "exception caught, but continuing...\n";
+  }
+  //std::cout << "(after exception)\n";
+  try {
+   rethrow_exception (exwidget);
+  } catch (const exception& e) {
+     //cout << "exception caught: " << e.what() << '\n';
+     //Logger Impl
+  }
     connect(m_slider, SIGNAL(sliderMoved(int)), SLOT(seekBySlider(int)));
     connect(m_slider, SIGNAL(sliderPressed()), SLOT(seekBySlider()));
     connect(m_player, SIGNAL(positionChanged(qint64)), SLOT(updateSlider(qint64)));
@@ -50,14 +97,37 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent)
     connect(m_player, SIGNAL(notifyIntervalChanged()), SLOT(updateSliderUnit()));
 
     vl->addWidget(m_slider);
+    try{
     QHBoxLayout *hb = new QHBoxLayout();
+    }catch(bad_exception &bptr){
+        //Logger Implementation
+    }
     vl->addLayout(hb);
-    m_openBtn = new QPushButton(tr("Open"));
-    m_playBtn = new QPushButton(tr("Play/Pause"));
-    m_stopBtn = new QPushButton(tr("Stop"));
+    const char* stropen ="Open";
+    const char* strpl = "Play/Pause";
+    const char* stpptr = "Stop";
+    string stropen(stropen);
+    string strplob(strpl);
+    string stpstgptr(stpptr);
+    try{
+    m_openBtn = new QPushButton(tr(stropen));
+    }catch(bad_exception &beptr){
+        //Logger Implementation
+    }
+    try{
+    m_playBtn = new QPushButton(tr(strplob));
+    }catch(bad_exception &bep){
+        //Logger Impl
+    }
+    try{
+    m_stopBtn = new QPushButton(tr(stpstgptr));
+    }catch(bad_exception &be){
+        //Logger Impl
+    }
     hb->addWidget(m_openBtn);
     hb->addWidget(m_playBtn);
     hb->addWidget(m_stopBtn);
+    
     connect(m_openBtn, SIGNAL(clicked()), SLOT(openMedia()));
     connect(m_playBtn, SIGNAL(clicked()), SLOT(playPause()));
     connect(m_stopBtn, SIGNAL(clicked()), m_player, SLOT(stop()));
