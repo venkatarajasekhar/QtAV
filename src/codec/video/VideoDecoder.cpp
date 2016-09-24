@@ -24,6 +24,7 @@
 #include "QtAV/private/factory.h"
 #include "QtAV/private/mkid.h"
 #include "utils/Logger.h"
+#include "utils/SharedPtr.h"
 
 namespace QtAV {
 FACTORY_DEFINE(VideoDecoder)
@@ -90,11 +91,19 @@ QStringList VideoDecoder::supportedCodecs()
     if (!codecs.isEmpty())
         return codecs;
     avcodec_register_all();
+    SmartPtrImpl<AVCodec> tDataptr(new AVCodec);
+    /*
     AVCodec* c = NULL;
     while ((c=av_codec_next(c))) {
         if (!av_codec_is_decoder(c) || c->type != AVMEDIA_TYPE_VIDEO)
             continue;
         codecs.append(QString::fromLatin1(c->name));
+    }
+    */
+    while ((tDataptr=av_codec_next(tDataptr))) {
+        if (!av_codec_is_decoder(tDataptr) || tDataptr->type != AVMEDIA_TYPE_VIDEO)
+            continue;
+        codecs.append(QString::fromLatin1(tDataptr->name));
     }
     return codecs;
 }
