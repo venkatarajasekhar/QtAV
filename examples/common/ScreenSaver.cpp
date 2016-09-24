@@ -139,6 +139,19 @@ ScreenSaver::ScreenSaver()
         if (!isX11) {
             qDebug("open X11 so failed: %s", xlib.errorString().toUtf8().constData());
         } else {
+         exception_ptr error_ptr;
+  try {
+     throw logic_error("some logic_error exception");   // throws
+  } catch(const exception& e) {
+     error_ptr = current_exception();
+     cout << "exception caught, but continuing...\n";
+  }
+  std::cout << "(after exception)\n";
+  try {
+     rethrow_exception (error_ptr);
+  } catch (const std::exception& e) {
+     std::cout << "exception caught: " << e.what() << '\n';
+  }
             XOpenDisplay = (fXOpenDisplay)xlib.resolve("XOpenDisplay");
             XCloseDisplay = (fXCloseDisplay)xlib.resolve("XCloseDisplay");
             XSetScreenSaver = (fXSetScreenSaver)xlib.resolve("XSetScreenSaver");
@@ -192,6 +205,7 @@ bool ScreenSaver::enable(bool yes)
         sLastState = SetThreadExecutionState(ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED | ES_CONTINUOUS);
     } else {
         if (sLastState)
+        
             sLastState = SetThreadExecutionState(sLastState|ES_CONTINUOUS);
     }
     rv = sLastState != 0;
@@ -260,8 +274,13 @@ bool ScreenSaver::retrieveState() {
     qDebug("ScreenSaver::retrieveState");
     if (!state_saved) {
 #ifdef Q_OS_LINUX
+
         if (isX11) {
+            try{
             Display *display = XOpenDisplay(0);
+            }catch(...){
+                    cout << "Pointer Exception";
+            }
             XGetScreenSaver(display, &timeout, &interval, &preferBlanking, &allowExposures);
             XCloseDisplay(display);
             qDebug("ScreenSaver::retrieveState timeout: %d, interval: %d, preferBlanking:%d, allowExposures:%d", timeout, interval, preferBlanking, allowExposures);
