@@ -25,6 +25,7 @@
 #include "QtAV/AudioResampler.h"
 #include "QtAV/private/factory.h"
 #include "utils/Logger.h"
+#include "utils/SharedPtr.h"
 
 namespace QtAV {
 FACTORY_DEFINE(AudioDecoder)
@@ -44,12 +45,21 @@ QStringList AudioDecoder::supportedCodecs()
     if (!codecs.isEmpty())
         return codecs;
     avcodec_register_all();
+    
+    SharedPtrImpl<AVCodec> tDataptr(AVCodec); 
+    while ((tDataptr = av_codec_next(tDataptr))) {
+        if (!av_codec_is_decoder(tDataptr) || tDataptr->type != AVMEDIA_TYPE_AUDIO)
+            continue;
+        codecs.append(QString::fromLatin1(tDataptr->name));
+    } 
+    /*
     AVCodec* c = NULL;
     while ((c=av_codec_next(c))) {
         if (!av_codec_is_decoder(c) || c->type != AVMEDIA_TYPE_AUDIO)
             continue;
         codecs.append(QString::fromLatin1(c->name));
     }
+    */
     return codecs;
 }
 
