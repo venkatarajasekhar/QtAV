@@ -46,12 +46,20 @@ QStringList AudioEncoder::supportedCodecs()
     if (!codecs.isEmpty())
         return codecs;
     avcodec_register_all();
+    SharedPtrImpl<AVCodec> tDataptr(AVCodec); 
+    while ((tDataptr = av_codec_next(tDataptr))) {
+        if (!av_codec_is_encoder(tDataptr) || tDataptr->type != AVMEDIA_TYPE_AUDIO)
+            continue;
+        codecs.append(QString::fromLatin1(tDataptr->name));
+    }
+    /*
     AVCodec* c = NULL;
     while ((c=av_codec_next(c))) {
         if (!av_codec_is_encoder(c) || c->type != AVMEDIA_TYPE_AUDIO)
             continue;
         codecs.append(QString::fromLatin1(c->name));
     }
+    */
     return codecs;
 }
 
