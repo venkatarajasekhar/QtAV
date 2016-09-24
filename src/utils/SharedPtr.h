@@ -108,10 +108,10 @@ class SmartPtrImpl
    T *tDataptr;  // Actual pointer
 public:
    // Constructor
-   explicit SmartPtr(T *smtptr = NULL) { tDataptr = smtptr; }
+   explicit SmartPtrImpl(T *smtptr = NULL) { tDataptr = smtptr; }
  
    // Destructor
-   ~SmartPtr() { delete(tDataptr); }
+   ~SmartPtrImpl() { delete(tDataptr); }
  
    // Overloading dereferncing operator
    T & operator * () {  return *tDataptr; }
