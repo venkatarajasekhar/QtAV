@@ -45,36 +45,51 @@ typedef void (*scale_samples_func)(quint8 *dst, const quint8 *src, int nb_sample
 /// from libavfilter/af_volume begin
 static inline void scale_samples_u8(quint8 *dst, const quint8 *src, int nb_samples, int volume, float)
 {
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
     for (int i = 0; i < nb_samples; i++)
-        dst[i] = av_clip_uint8(((((qint64)src[i] - 128) * volume + 128) >> 8) + 128);
+        qdest[i] = av_clip_uint8(((((qint64)qsrc[i] - 128) * volume + 128) >> 8) + 128);
 }
 
 static inline void scale_samples_u8_small(quint8 *dst, const quint8 *src, int nb_samples, int volume, float)
 {
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
     for (int i = 0; i < nb_samples; i++)
-        dst[i] = av_clip_uint8((((src[i] - 128) * volume + 128) >> 8) + 128);
+        qdest[i] = av_clip_uint8((((qsrc[i] - 128) * volume + 128) >> 8) + 128);
 }
 
 static inline void scale_samples_s16(quint8 *dst, const quint8 *src, int nb_samples, int volume, float)
 {
-    int16_t *smp_dst       = (int16_t *)dst;
-    const int16_t *smp_src = (const int16_t *)src;
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
+    int16_t *smp_dst       = (int16_t *)qdest;
+    const int16_t *smp_src = (const int16_t *)qsrc;
     for (int i = 0; i < nb_samples; i++)
         smp_dst[i] = av_clip_int16(((qint64)smp_src[i] * volume + 128) >> 8);
 }
 
 static inline void scale_samples_s16_small(quint8 *dst, const quint8 *src, int nb_samples, int volume, float)
 {
-    int16_t *smp_dst       = (int16_t *)dst;
-    const int16_t *smp_src = (const int16_t *)src;
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
+    int16_t *smp_dst       = (int16_t *)qdest;
+    const int16_t *smp_src = (const int16_t *)qsrc;
     for (int i = 0; i < nb_samples; i++)
         smp_dst[i] = av_clip_int16((smp_src[i] * volume + 128) >> 8);
 }
 
 static inline void scale_samples_s32(quint8 *dst, const quint8 *src, int nb_samples, int volume, float)
 {
-    qint32 *smp_dst       = (qint32 *)dst;
-    const qint32 *smp_src = (const qint32 *)src;
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
+    qint32 *smp_dst       = (qint32 *)qdest;
+    const qint32 *smp_src = (const qint32 *)qsrc;
     for (int i = 0; i < nb_samples; i++)
         smp_dst[i] = av_clipl_int32((((qint64)smp_src[i] * volume + 128) >> 8));
 }
@@ -84,8 +99,11 @@ static inline void scale_samples_s32(quint8 *dst, const quint8 *src, int nb_samp
 template<typename T>
 static inline void scale_samples(quint8 *dst, const quint8 *src, int nb_samples, int, float volume)
 {
-    T *smp_dst = (T *)dst;
-    const T *smp_src = (const T *)src;
+    quint8 qdest[nb_samples],qsrc[nb_samples]; 
+    qdest = dst;
+    qsrc = src;
+    T *smp_dst = (T *)qdest;
+    const T *smp_src = (const T *)qsrc;
     for (int i = 0; i < nb_samples; ++i)
         smp_dst[i] = smp_src[i] * (T)volume;
 }
@@ -151,12 +169,12 @@ public:
         cond.wait(&mutex, (us+500LL)/1000LL);
     }
 
-    struct FrameInfo {
+   typedef  struct FrameInfo_t {
         FrameInfo(const QByteArray& d = QByteArray(), qreal t = 0, int us = 0) : timestamp(t), duration(us), data(d) {}
         qreal timestamp;
         int duration; // in us
         QByteArray data;
-    };
+    }FrameInfo;
 
     void resetStatus() {
         play_pos = 0;
@@ -218,8 +236,16 @@ void AudioOutputPrivate::playInitialData()
                     || format.sampleFormat() == AudioFormat::SampleFormat_Unsigned8Planar)
             ? 0x80 : 0;
     for (quint32 i = 0; i < nb_buffers; ++i) {
+        try{
         const QByteArray data(backend->buffer_size, c);
+        }catch(...){
+            cout << "Error";
+        }
+        try{
         backend->write(data); // fill silence byte, not always 0. AudioFormat.silenceByte
+        }catch(...){
+        cout << "Exception";
+        }
         frame_infos.push_back(FrameInfo(data, 0, 0)); // initial data can be small (1 instead of buffer_samples)
     }
     backend->play();
