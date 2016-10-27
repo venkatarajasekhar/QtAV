@@ -46,8 +46,8 @@ namespace QtAV {
 class VideoFormatPrivate : public QSharedData
 {
 public:
-    VideoFormatPrivate(VideoFormat::PixelFormat fmt)
-        : pixfmt(fmt)
+    VideoFormatPrivate(VideoFormat::PixelFormat Vipxlfmt)
+        : pixfmt(Vipxlfmt)
         , pixfmt_ff(QTAV_PIX_FMT_C(NONE))
         , qpixfmt(QImage::Format_Invalid)
         , planes(0)
@@ -56,16 +56,16 @@ public:
         , bpc(0)
         , pixdesc(0)
     {
-        if (fmt == VideoFormat::Format_Invalid) {
+        if (Vipxlfmt == VideoFormat::Format_Invalid) {
             pixfmt_ff = QTAV_PIX_FMT_C(NONE);
             qpixfmt = QImage::Format_Invalid;
-            return;
+            //return;
         }
-        init(fmt);
+        init(Vipxlfmt);
     }
-    VideoFormatPrivate(AVPixelFormat fmt)
+    VideoFormatPrivate(AVPixelFormat Avpxlfmt)
         : pixfmt(VideoFormat::Format_Invalid)
-        , pixfmt_ff(fmt)
+        , pixfmt_ff(Avpxlfmt)
         , qpixfmt(QImage::Format_Invalid)
         , planes(0)
         , bpp(0)
@@ -73,19 +73,19 @@ public:
         , bpc(0)
         , pixdesc(0)
     {
-        init(fmt);
+        init(Avpxlfmt);
     }
-    VideoFormatPrivate(QImage::Format fmt)
+    VideoFormatPrivate(QImage::Format Imgfmt)
         : pixfmt(VideoFormat::Format_Invalid)
         , pixfmt_ff(QTAV_PIX_FMT_C(NONE))
-        , qpixfmt(fmt)
+        , qpixfmt(Imgfmt)
         , planes(0)
         , bpp(0)
         , bpp_pad(0)
         , bpc(0)
         , pixdesc(0)
     {
-        init(fmt);
+        init(Imgfmt);
     }
     void init(VideoFormat::PixelFormat fmt) {
         pixfmt = fmt;
@@ -177,10 +177,14 @@ private:
 };
 
 // TODO: use FFmpeg macros to get right endian
-static const struct {
+static const struct pixfmt_map_s{
     VideoFormat::PixelFormat fmt;
     AVPixelFormat ff; //int
-} pixfmt_map[] = {
+}pixfmt_map; 
+    
+  pixfmt_map_s *pixfmt_map; 
+    
+    pixfmt_map[] = {
     { VideoFormat::Format_YUV420P, QTAV_PIX_FMT_C(YUV420P) },   ///< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
     { VideoFormat::Format_YV12, QTAV_PIX_FMT_C(YUV420P) },   ///< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
     { VideoFormat::Format_YUYV, QTAV_PIX_FMT_C(YUYV422) }, //??   ///< packed YUV 4:2:2, 16bpp, Y0 Cb Y1 Cr
