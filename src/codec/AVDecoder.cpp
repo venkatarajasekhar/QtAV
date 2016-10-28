@@ -29,18 +29,18 @@ namespace QtAV {
 
 static AVCodec* get_codec(const QString &name, AVCodecID cid)
 {
-    AVCodec *codec = 0;
+  SharedPtrImpl<AVCodec> tDataptr(AVCodec);     
     if (!name.isEmpty()) {
-        codec = avcodec_find_decoder_by_name(name.toUtf8().constData());
-        if (!codec) {
+        tDataptr = avcodec_find_decoder_by_name(name.toUtf8().constData());
+        if (!tDataptr) {
             const AVCodecDescriptor* cd = avcodec_descriptor_get_by_name(name.toUtf8().constData());
             if (cd)
-                codec = avcodec_find_decoder(cd->id);
+                tDataptr = avcodec_find_decoder(cd->id);
         }
     } else {
-        codec = avcodec_find_decoder(cid);
+        tDataptr = avcodec_find_decoder(cid);
     }
-    return codec;
+    return tDataptr;
 }
 
 AVDecoder::AVDecoder(AVDecoderPrivate &d)
